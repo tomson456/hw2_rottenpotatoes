@@ -1,5 +1,12 @@
 class MoviesController < ApplicationController
 
+  def initialize
+    @all_ratings = Movie.all_ratings
+    @ratings= @all_ratings;
+    @sort_by= :id;
+    super
+  end
+
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
@@ -7,21 +14,49 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @all_ratings = Movie.all_ratings
-  
-    @title_class = ""
-    @rel_date_class = ""
-    @order = params[:order]
-    if @order == 'title'
-      @movies = Movie.order(@order)
-      @title_class = "hilite"
-    elsif @order == 'release_date'
-      @movies = Movie.order(:release_date)
-      @rel_date_class = "hilite"
+    redirect = false
+    if params["sort_by"]
+      @sort_by = params["sort_by"]
+    elsif session[:sort_by]
+      @sort_by = session[:sort_by]
+      redirect = true
     else
-      @movies = Movie.all
+      @sort_by = :id
+      redirect = true
+    end                    
+ 
+    if params["ratings"]
+      @ratings= params["ratings"]
+    elsif session[:ratings]
+      @ratings =session[:ratings]
+      redirect = true
+    else
+      @ratings = {}
+      @all_ratings.each do |rating|
+        @ratings[rating]="yes"
+      end
+      redirect = true
     end
-    
+    if redirect
+      redirect_to movies_path(:sort_by=>@sort_by,:ratings=>@ratings)
+    end
+ 
+    all_movies = Movie.order(@sort_by)
+ 
+    @movies = []
+ 
+ 
+    all_movies.each do |movie|
+      if @ratings.keys.include?(movie["rating"])
+        @movies << movie
+      end
+    end
+ 
+    flash[:sort_by] = @sort_by
+    flash[:ratings] = @ratings
+    session[:sort_by] = @sort_by
+    session[:ratings] = @ratings
+ 
   
   end
 
