@@ -7,6 +7,8 @@ class MoviesController < ApplicationController
   end
 
   def index
+    @all_ratings = Movie.all_ratings
+  
     @title_class = ""
     @rel_date_class = ""
     @order = params[:order]
